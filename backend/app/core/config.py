@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     
     # Vector Embeddings
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"  # Sentence transformer model
-    VECTOR_DIMENSIONS: int = 1536  # Dimensions for vector embeddings
+    VECTOR_DIMENSIONS: int = 384  # Dimensions for vector embeddings (all-MiniLM-L6-v2 produces 384-dim vectors)
 
     # Security (for POC, simplified)
     SECRET_KEY: str = os.getenv("SECRET_KEY", "dev_secret_key")

@@ -23,7 +23,7 @@ class Note(Base):
     tags = Column(ARRAY(String), default=[])  # Array of tags
     links_to = Column(ARRAY(String), default=[])  # Outgoing links
     links_from = Column(ARRAY(String), default=[])  # Incoming links
-    vector_data = Column(Vector(1536))  # Embedding vector for similarity search
+    vector_data = Column(Vector(384))  # Embedding vector for similarity search
 
 class NoteRevision(Base):
     __tablename__ = "notes_revision"
