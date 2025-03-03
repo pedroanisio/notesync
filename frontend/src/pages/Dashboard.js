@@ -1,200 +1,320 @@
 // src/pages/Dashboard.js
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Heading,
-  Grid,
-  Button,
+  SimpleGrid,
+  Container,
+  Text,
+  VStack,
   HStack,
+  Button,
+  useColorModeValue,
+  Flex,
+  Icon,
+  InputGroup,
+  Input,
+  InputRightElement,
+  Tag,
+  TagLabel,
+  useDisclosure,
+  ScaleFade,
+  Skeleton,
+  SkeletonText,
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
-  Flex,
-  Text,
-  useColorModeValue,
-  useToast,
-  Spinner,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Select,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, SearchIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, AddIcon, SearchIcon } from '@chakra-ui/icons';
+import { BsGrid, BsList } from 'react-icons/bs';
+import { useNoteContext } from '../contexts/NoteContext';
 import NoteCard from '../components/notes/NoteCard';
-import { useNotes } from '../contexts/NoteContext';
-import { getAllTags } from '../services/noteService';
 
 const Dashboard = () => {
-  const { notes, loading, error, fetchNotes, archiveNoteById } = useNotes();
-  const [allTags, setAllTags] = useState([]);
-  const [activeTag, setActiveTag] = useState(null);
-  const [searchText, setSearchText] = useState('');
+  const { notes, loading, fetchNotes } = useNoteContext();
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortOption, setSortOption] = useState('newest');
+  const [filterTag, setFilterTag] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [filteredNotes, setFilteredNotes] = useState([]);
-  const [sortOption, setSortOption] = useState('updated');
-  const toast = useToast();
-  
-  // Move the useColorModeValue hook to the top level
-  const emptyStateBgColor = useColorModeValue('gray.50', 'gray.700');
+  const { isOpen, onOpen } = useDisclosure({ defaultIsOpen: true });
 
-  // Load all tags
   useEffect(() => {
-    const loadTags = async () => {
-      try {
-        const tags = await getAllTags();
-        setAllTags(tags);
-      } catch (err) {
-        toast({
-          title: 'Error loading tags',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+    fetchNotes();
+    // Show animation on initial load
+    onOpen();
+  }, [fetchNotes]);
+
+  useEffect(() => {
+    if (notes) {
+      let result = [...notes];
+      
+      // Apply search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter(note => 
+          note.title.toLowerCase().includes(query) || 
+          note.content.toLowerCase().includes(query)
+        );
       }
-    };
-    loadTags();
-  }, [toast]);
-
-  // Handle archiving a note
-  const handleArchive = async (noteId) => {
-    try {
-      await archiveNoteById(noteId);
-      toast({
-        title: 'Note archived',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (err) {
-      toast({
-        title: 'Error archiving note',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      
+      // Apply tag filter
+      if (filterTag) {
+        result = result.filter(note => 
+          note.tags && note.tags.some(tag => tag.toLowerCase() === filterTag.toLowerCase())
+        );
+      }
+      
+      // Apply sorting
+      switch (sortOption) {
+        case 'newest':
+          result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          break;
+        case 'oldest':
+          result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+          break;
+        case 'alphabetical':
+          result.sort((a, b) => a.title.localeCompare(b.title));
+          break;
+        case 'updated':
+          result.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+          break;
+        default:
+          break;
+      }
+      
+      setFilteredNotes(result);
     }
-  };
+  }, [notes, searchQuery, filterTag, sortOption]);
 
-  // Filter and sort notes
-  useEffect(() => {
-    if (!notes) return;
+  // Get all unique tags across notes
+  const allTags = React.useMemo(() => {
+    if (!notes) return [];
+    const tagSet = new Set();
+    notes.forEach(note => {
+      if (note.tags) {
+        note.tags.forEach(tag => tagSet.add(tag.toLowerCase()));
+      }
+    });
+    return Array.from(tagSet);
+  }, [notes]);
 
-    let filtered = [...notes];
+  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
 
-    // Filter by tag if active
-    if (activeTag) {
-      filtered = filtered.filter((note) => note.tags.includes(activeTag));
-    }
-
-    // Filter by search text
-    if (searchText) {
-      const searchLower = searchText.toLowerCase();
-      filtered = filtered.filter(
-        (note) =>
-          note.title.toLowerCase().includes(searchLower) ||
-          note.raw_content.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Sort notes
-    if (sortOption === 'updated') {
-      filtered.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-    } else if (sortOption === 'created') {
-      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    } else if (sortOption === 'title') {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-    }
-
-    setFilteredNotes(filtered);
-  }, [notes, activeTag, searchText, sortOption]);
+  if (loading) {
+    return (
+      <Box bg={bgColor} minH="100vh" py={8}>
+        <Container maxW="container.xl">
+          <VStack spacing={6} align="stretch">
+            <Skeleton height="40px" width="200px" />
+            <HStack>
+              <Skeleton height="36px" width="120px" />
+              <Skeleton height="36px" width="120px" />
+            </HStack>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <Box key={i} p={5} boxShadow="md" rounded="md" bg={cardBg}>
+                  <SkeletonText mt="4" noOfLines={4} spacing="4" />
+                </Box>
+              ))}
+            </SimpleGrid>
+          </VStack>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
-    <Box>
-      <Flex direction="column" maxW="1200px" mx="auto">
-        <Flex
-          justify="space-between"
-          align="center"
-          mb={6}
-          direction={{ base: 'column', md: 'row' }}
-          gap={4}
-        >
-          <Heading as="h1" size="xl">
-            All Notes
-          </Heading>
-
-          <HStack spacing={4}>
-            <Menu>
-              <MenuButton as={Button} rightIcon={<ChevronDownIcon />} size="sm">
-                {activeTag ? `Tag: ${activeTag}` : 'Filter by Tag'}
-              </MenuButton>
-              <MenuList>
-                <MenuItem onClick={() => setActiveTag(null)}>All Tags</MenuItem>
-                {allTags.map((tag) => (
-                  <MenuItem key={tag} onClick={() => setActiveTag(tag)}>
-                    {tag}
-                  </MenuItem>
-                ))}
-              </MenuList>
-            </Menu>
-
-            <Select
-              size="sm"
-              w={{ base: 'full', md: '150px' }}
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
+    <ScaleFade in={isOpen} initialScale={0.9}>
+      <Box bg={bgColor} minH="100vh" py={8}>
+        <Container maxW="container.xl">
+          <VStack spacing={6} align="stretch">
+            <Flex 
+              justify="space-between" 
+              align="center" 
+              wrap={{ base: 'wrap', md: 'nowrap' }}
+              gap={4}
             >
-              <option value="updated">Recently Updated</option>
-              <option value="created">Recently Created</option>
-              <option value="title">Title (A-Z)</option>
-            </Select>
-          </HStack>
-        </Flex>
+              <Heading 
+                as="h1" 
+                size="xl" 
+                mb={{ base: 2, md: 0 }}
+                bgGradient="linear(to-r, brand.400, brand.600)"
+                bgClip="text"
+                fontWeight="bold"
+              >
+                My Notes
+              </Heading>
+              
+              <HStack spacing={3} ml="auto">
+                <Button
+                  as={RouterLink}
+                  to="/notes/create"
+                  colorScheme="brand"
+                  leftIcon={<AddIcon />}
+                  size="sm"
+                  borderRadius="full"
+                >
+                  New Note
+                </Button>
+              </HStack>
+            </Flex>
 
-        <InputGroup mb={6}>
-          <InputLeftElement pointerEvents="none">
-            <SearchIcon color="gray.300" />
-          </InputLeftElement>
-          <Input
-            placeholder="Filter notes..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-        </InputGroup>
+            <Flex 
+              direction={{ base: 'column', md: 'row' }} 
+              justify="space-between" 
+              align={{ base: 'stretch', md: 'center' }}
+              gap={4}
+              py={2}
+            >
+              {/* Search Bar */}
+              <InputGroup maxW={{ base: '100%', md: '320px' }}>
+                <Input
+                  placeholder="Search in notes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  bg={cardBg}
+                  borderRadius="full"
+                  size="sm"
+                />
+                <InputRightElement>
+                  <Icon as={SearchIcon} color="gray.500" />
+                </InputRightElement>
+              </InputGroup>
 
-        {loading ? (
-          <Flex justify="center" align="center" h="200px">
-            <Spinner size="xl" />
-          </Flex>
-        ) : error ? (
-          <Box textAlign="center" p={5} color="red.500">
-            {error}
-          </Box>
-        ) : filteredNotes.length === 0 ? (
-          <Box
-            textAlign="center"
-            p={10}
-            borderWidth={1}
-            borderRadius="lg"
-            bg={emptyStateBgColor}
-          >
-            <Text fontSize="lg">No notes found. Create your first note!</Text>
-          </Box>
-        ) : (
-          <Grid
-            templateColumns={{
-              base: '1fr',
-              md: 'repeat(2, 1fr)',
-              lg: 'repeat(3, 1fr)',
-            }}
-            gap={6}
-          >
-            {filteredNotes.map((note) => (
-              <NoteCard key={note.id} note={note} onArchive={handleArchive} />
-            ))}
-          </Grid>
-        )}
-      </Flex>
-    </Box>
+              <HStack spacing={3}>
+                {/* Tag Filter */}
+                <Menu closeOnSelect={true}>
+                  <MenuButton 
+                    as={Button} 
+                    rightIcon={<ChevronDownIcon />}
+                    size="sm"
+                    variant="outline"
+                    borderRadius="full"
+                  >
+                    {filterTag ? `Tag: ${filterTag}` : 'Filter by Tag'}
+                  </MenuButton>
+                  <MenuList maxH="200px" overflowY="auto">
+                    <MenuItem onClick={() => setFilterTag('')}>All Tags</MenuItem>
+                    {allTags.map(tag => (
+                      <MenuItem key={tag} onClick={() => setFilterTag(tag)}>
+                        {tag}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </Menu>
+
+                {/* Sort Options */}
+                <Select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  size="sm"
+                  width="auto"
+                  borderRadius="full"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="alphabetical">Alphabetical</option>
+                  <option value="updated">Recently Updated</option>
+                </Select>
+
+                {/* View Mode Toggle */}
+                <HStack 
+                  spacing={1} 
+                  bg={useColorModeValue('gray.200', 'gray.700')} 
+                  borderRadius="full" 
+                  p={1}
+                >
+                  <Button
+                    size="sm"
+                    variant={viewMode === 'grid' ? 'solid' : 'ghost'}
+                    onClick={() => setViewMode('grid')}
+                    borderRadius="full"
+                    colorScheme={viewMode === 'grid' ? 'brand' : undefined}
+                    p={2}
+                  >
+                    <Icon as={BsGrid} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={viewMode === 'list' ? 'solid' : 'ghost'}
+                    onClick={() => setViewMode('list')}
+                    borderRadius="full"
+                    colorScheme={viewMode === 'list' ? 'brand' : undefined}
+                    p={2}
+                  >
+                    <Icon as={BsList} />
+                  </Button>
+                </HStack>
+              </HStack>
+            </Flex>
+
+            {filteredNotes.length === 0 ? (
+              <Flex 
+                direction="column" 
+                align="center" 
+                justify="center" 
+                py={12}
+                bg={cardBg}
+                borderRadius="lg"
+                boxShadow="sm"
+              >
+                <Text 
+                  fontSize="xl" 
+                  color="gray.500" 
+                  fontWeight="medium"
+                  mb={4}
+                >
+                  No notes found
+                </Text>
+                {filterTag || searchQuery ? (
+                  <Button 
+                    onClick={() => {
+                      setFilterTag('');
+                      setSearchQuery('');
+                    }}
+                    colorScheme="brand"
+                    size="sm"
+                    borderRadius="full"
+                  >
+                    Clear Filters
+                  </Button>
+                ) : (
+                  <Button
+                    as={RouterLink}
+                    to="/notes/create"
+                    colorScheme="brand"
+                    leftIcon={<AddIcon />}
+                    size="sm"
+                    borderRadius="full"
+                  >
+                    Create Your First Note
+                  </Button>
+                )}
+              </Flex>
+            ) : (
+              viewMode === 'grid' ? (
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                  {filteredNotes.map((note) => (
+                    <NoteCard key={note.id} note={note} />
+                  ))}
+                </SimpleGrid>
+              ) : (
+                <VStack spacing={4} align="stretch">
+                  {filteredNotes.map((note) => (
+                    <NoteCard key={note.id} note={note} isListView={true} />
+                  ))}
+                </VStack>
+              )
+            )}
+          </VStack>
+        </Container>
+      </Box>
+    </ScaleFade>
   );
 };
 

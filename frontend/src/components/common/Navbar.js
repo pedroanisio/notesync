@@ -19,13 +19,34 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  Container,
+  HStack,
+  Avatar,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  useColorMode,
+  Tooltip,
+  useBreakpointValue,
 } from '@chakra-ui/react';
-import { HamburgerIcon, CloseIcon, ChevronDownIcon, ChevronRightIcon, SearchIcon } from '@chakra-ui/icons';
+import { 
+  HamburgerIcon, 
+  CloseIcon, 
+  ChevronDownIcon, 
+  ChevronRightIcon, 
+  SearchIcon, 
+  SunIcon, 
+  MoonIcon,
+  AddIcon,
+} from '@chakra-ui/icons';
 
 const Navbar = () => {
   const { isOpen, onToggle } = useDisclosure();
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const { colorMode, toggleColorMode } = useColorMode();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -34,88 +55,116 @@ const Navbar = () => {
     }
   };
 
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const navTextColor = useColorModeValue('gray.600', 'gray.200');
+  const logoColor = useColorModeValue('brand.600', 'brand.400');
+
   return (
-    <Box>
+    <Box position="sticky" top={0} zIndex={10}>
       <Flex
-        bg={useColorModeValue('white', 'gray.800')}
-        color={useColorModeValue('gray.600', 'white')}
+        bg={bgColor}
+        color={navTextColor}
         minH={'60px'}
         py={{ base: 2 }}
         px={{ base: 4 }}
         borderBottom={1}
         borderStyle={'solid'}
-        borderColor={useColorModeValue('gray.200', 'gray.700')}
+        borderColor={borderColor}
         align={'center'}
+        boxShadow="sm"
       >
-        <Flex
-          flex={{ base: 1, md: 'auto' }}
-          ml={{ base: -2 }}
-          display={{ base: 'flex', md: 'none' }}
-        >
-          <IconButton
-            onClick={onToggle}
-            icon={isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />}
-            variant={'ghost'}
-            aria-label={'Toggle Navigation'}
-          />
-        </Flex>
-        <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'start' }}>
-          <Text
-            textAlign={useColorModeValue('left', 'center')}
-            fontFamily={'heading'}
-            color={useColorModeValue('gray.800', 'white')}
-            as={RouterLink}
-            to="/"
-            fontWeight="bold"
+        <Container maxW="container.xl">
+          <Flex
+            flex={{ base: 1, md: 'auto' }}
+            ml={{ base: -2 }}
+            display={{ base: 'flex', md: 'none' }}
           >
-            NoteSync
-          </Text>
-
-          <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
-            <DesktopNav />
+            <IconButton
+              onClick={onToggle}
+              icon={
+                isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />
+              }
+              variant={'ghost'}
+              aria-label={'Toggle Navigation'}
+            />
           </Flex>
-        </Flex>
+          <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'start' }} align="center">
+            <Text
+              as={RouterLink}
+              to="/"
+              textAlign={useBreakpointValue({ base: 'center', md: 'left' })}
+              fontFamily={'heading'}
+              fontWeight={700}
+              fontSize="xl"
+              color={logoColor}
+              letterSpacing="-0.4px"
+              _hover={{
+                textDecoration: 'none',
+                color: 'brand.500',
+              }}
+            >
+              NoteSync
+            </Text>
 
-        <Stack
-          flex={{ base: 1, md: 0 }}
-          justify={'flex-end'}
-          direction={'row'}
-          spacing={6}
-          align="center"
-        >
-          <form onSubmit={handleSearch} style={{ width: '100%', maxWidth: '300px' }}>
-            <InputGroup>
-              <Input
-                placeholder="Search notes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                size="sm"
-              />
-              <InputRightElement>
-                <IconButton
-                  aria-label="Search notes"
-                  icon={<SearchIcon />}
-                  size="sm"
-                  type="submit"
+            <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
+              <DesktopNav />
+            </Flex>
+          </Flex>
+
+          <HStack spacing={3}>
+            <form onSubmit={handleSearch} style={{ display: 'flex' }}>
+              <InputGroup size="sm" w={{ base: '120px', md: '200px' }}>
+                <Input
+                  placeholder="Search notes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  borderRadius="full"
+                  bg={useColorModeValue('gray.100', 'gray.700')}
+                  _placeholder={{ color: 'gray.500' }}
+                  _focus={{
+                    bg: useColorModeValue('white', 'gray.800'),
+                    borderColor: 'brand.400',
+                  }}
                 />
-              </InputRightElement>
-            </InputGroup>
-          </form>
-          <Button
-            as={RouterLink}
-            to="/notes/create"
-            display={{ base: 'none', md: 'inline-flex' }}
-            fontSize={'sm'}
-            fontWeight={600}
-            color={'white'}
-            bg={'blue.500'}
-            _hover={{
-              bg: 'blue.400',
-            }}
-          >
-            Create Note
-          </Button>
-        </Stack>
+                <InputRightElement>
+                  <IconButton
+                    type="submit"
+                    aria-label="Search"
+                    icon={<SearchIcon />}
+                    size="xs"
+                    variant="ghost"
+                    colorScheme="brand"
+                  />
+                </InputRightElement>
+              </InputGroup>
+            </form>
+
+            <Tooltip label="Toggle color mode">
+              <IconButton
+                size="sm"
+                variant="ghost"
+                onClick={toggleColorMode}
+                icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+                aria-label="Toggle color mode"
+              />
+            </Tooltip>
+            
+            <Tooltip label="Create new note">
+              <Button
+                as={RouterLink}
+                to="/notes/create"
+                colorScheme="brand"
+                size="sm"
+                leftIcon={<AddIcon />}
+                borderRadius="full"
+                fontWeight={500}
+              >
+                New Note
+              </Button>
+            </Tooltip>
+          </HStack>
+        </Container>
       </Flex>
 
       <Collapse in={isOpen} animateOpacity>
@@ -127,8 +176,9 @@ const Navbar = () => {
 
 const DesktopNav = () => {
   const linkColor = useColorModeValue('gray.600', 'gray.200');
-  const linkHoverColor = useColorModeValue('gray.800', 'white');
+  const linkHoverColor = useColorModeValue('brand.500', 'brand.400');
   const popoverContentBgColor = useColorModeValue('white', 'gray.800');
+  const popoverBorderColor = useColorModeValue('gray.200', 'gray.700');
 
   return (
     <Stack direction={'row'} spacing={4}>
@@ -138,6 +188,7 @@ const DesktopNav = () => {
             <PopoverTrigger>
               <Link
                 p={2}
+                href={navItem.href ?? '#'}
                 as={RouterLink}
                 to={navItem.href ?? '#'}
                 fontSize={'sm'}
@@ -149,16 +200,28 @@ const DesktopNav = () => {
                 }}
               >
                 {navItem.label}
+                {navItem.children && (
+                  <Icon
+                    as={ChevronDownIcon}
+                    transition={'all .25s ease-in-out'}
+                    w={4}
+                    h={4}
+                    ml={1}
+                    mt={-1}
+                  />
+                )}
               </Link>
             </PopoverTrigger>
 
             {navItem.children && (
               <PopoverContent
-                border={0}
-                boxShadow={'xl'}
-                bg={popoverContentBgColor}
+                border={1}
+                borderStyle={'solid'}
+                borderColor={popoverBorderColor}
                 p={4}
-                rounded={'xl'}
+                rounded={'md'}
+                boxShadow={'lg'}
+                bg={popoverContentBgColor}
                 minW={'sm'}
               >
                 <Stack>
@@ -176,6 +239,8 @@ const DesktopNav = () => {
 };
 
 const DesktopSubNav = ({ label, href, subLabel }) => {
+  const hoverBg = useColorModeValue('brand.50', 'gray.700');
+
   return (
     <Link
       as={RouterLink}
@@ -184,18 +249,18 @@ const DesktopSubNav = ({ label, href, subLabel }) => {
       display={'block'}
       p={2}
       rounded={'md'}
-      _hover={{ bg: useColorModeValue('blue.50', 'gray.900') }}
+      _hover={{ bg: hoverBg }}
     >
       <Stack direction={'row'} align={'center'}>
         <Box>
           <Text
             transition={'all .3s ease'}
-            _groupHover={{ color: 'blue.400' }}
+            _groupHover={{ color: 'brand.500' }}
             fontWeight={500}
           >
             {label}
           </Text>
-          <Text fontSize={'sm'}>{subLabel}</Text>
+          <Text fontSize={'sm'} color="gray.500">{subLabel}</Text>
         </Box>
         <Flex
           transition={'all .3s ease'}
@@ -206,7 +271,7 @@ const DesktopSubNav = ({ label, href, subLabel }) => {
           align={'center'}
           flex={1}
         >
-          <Icon color={'blue.400'} w={5} h={5} as={ChevronRightIcon} />
+          <Icon color={'brand.500'} w={5} h={5} as={ChevronRightIcon} />
         </Flex>
       </Stack>
     </Link>
@@ -219,24 +284,13 @@ const MobileNav = () => {
       bg={useColorModeValue('white', 'gray.800')}
       p={4}
       display={{ md: 'none' }}
+      borderBottom={1}
+      borderStyle={'solid'}
+      borderColor={useColorModeValue('gray.200', 'gray.700')}
     >
       {NAV_ITEMS.map((navItem) => (
         <MobileNavItem key={navItem.label} {...navItem} />
       ))}
-      <Button
-        as={RouterLink}
-        to="/notes/create"
-        w="full"
-        fontSize={'sm'}
-        fontWeight={600}
-        color={'white'}
-        bg={'blue.500'}
-        _hover={{
-          bg: 'blue.400',
-        }}
-      >
-        Create Note
-      </Button>
     </Stack>
   );
 };
