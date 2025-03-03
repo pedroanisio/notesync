@@ -6,6 +6,9 @@ const NoteContext = createContext();
 
 export const useNotes = () => useContext(NoteContext);
 
+// Add the new hook name that our modern components are using
+export const useNoteContext = () => useContext(NoteContext);
+
 export const NoteProvider = ({ children }) => {
   console.log('🔍 NoteProvider initializing');
   const [notes, setNotes] = useState([]);
