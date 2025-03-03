@@ -1,0 +1,296 @@
+{
+	"info": {
+		"_postman_id": "random-uuid",
+		"name": "NoteSync",
+		"description": "API collection for NoteSync application",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Notes",
+			"item": [
+				{
+					"name": "Create Note",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Sample Note\",\n    \"raw_content\": \"# Sample Note\\n\\nThis is a sample note with some content.\",\n    \"tags\": [\"sample\", \"test\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes"]
+						},
+						"description": "Create a new note"
+					}
+				},
+				{
+					"name": "Get All Notes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/?skip=0&limit=100&include_archived=false",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes"],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "include_archived",
+									"value": "false"
+								}
+							]
+						},
+						"description": "Get all notes with pagination"
+					}
+				},
+				{
+					"name": "Get Note by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "{{note_id}}"]
+						},
+						"description": "Get a specific note by ID"
+					}
+				},
+				{
+					"name": "Update Note",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Note\",\n    \"raw_content\": \"# Updated Note\\n\\nThis note has been updated.\",\n    \"tags\": [\"updated\", \"test\"],\n    \"archived\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "{{note_id}}"]
+						},
+						"description": "Update an existing note"
+					}
+				},
+				{
+					"name": "Archive Note",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}/archive",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "{{note_id}}", "archive"]
+						},
+						"description": "Archive a note (soft delete)"
+					}
+				},
+				{
+					"name": "Get All Tags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/tags/all",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "tags", "all"]
+						},
+						"description": "Get all unique tags across notes"
+					}
+				},
+				{
+					"name": "Get Notes by Tag",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/tag/{{tag}}?skip=0&limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "tag", "{{tag}}"],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Get notes by tag"
+					}
+				},
+				{
+					"name": "Search Notes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"search term\",\n    \"tags\": [\"optional\", \"tags\"],\n    \"semantic\": true,\n    \"limit\": 10,\n    \"archived\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/search",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "search"]
+						},
+						"description": "Search for notes by text and/or tags, with optional semantic search"
+					}
+				},
+				{
+					"name": "Get Similar Notes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}/similar?limit=5",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "{{note_id}}", "similar"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Get notes similar to the specified note using vector similarity"
+					}
+				},
+				{
+					"name": "Merge Notes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"note_ids\": [\"id1\", \"id2\"],\n    \"new_title\": \"Merged Note\",\n    \"separator\": \"\\n\\n---\\n\\n\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/merge",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "merge"]
+						},
+						"description": "Merge multiple notes into a new note"
+					}
+				}
+			]
+		},
+		{
+			"name": "Revisions",
+			"item": [
+				{
+					"name": "Get Note Revisions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}/revisions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "{{note_id}}", "revisions"]
+						},
+						"description": "Get all revisions for a note"
+					}
+				},
+				{
+					"name": "Get Revision by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/revision/{{revision_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "revision", "{{revision_id}}"]
+						},
+						"description": "Get a specific revision by ID"
+					}
+				},
+				{
+					"name": "Get Revision Diff",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/revision/{{revision_id}}/diff",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "revision", "{{revision_id}}", "diff"]
+						},
+						"description": "Get diff view for a revision"
+					}
+				},
+				{
+					"name": "Revert to Revision",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"revision_name\": \"Revert to previous version\",\n    \"revision_note\": \"Reverting due to errors in latest changes\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/revision/{{revision_id}}/revert",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "revision", "{{revision_id}}", "revert"]
+						},
+						"description": "Revert a note to a specific revision"
+					}
+				},
+				{
+					"name": "Get Note at Revision",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}/revision/{{revision_number}}/content",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notes", "{{note_id}}", "revision", "{{revision_number}}", "content"]
+						},
+						"description": "Get a note's content at a specific revision"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000"
+		}
+	]
+} 

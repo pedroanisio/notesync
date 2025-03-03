@@ -13,7 +13,7 @@ services:
       - DATABASE_URI=postgresql://postgres:postgres@db:5432/notesdb
     depends_on:
       - db
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: bash -c "chmod +x /app/scripts/init-db.sh && /app/scripts/init-db.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"    
 
   db:
     image: ankane/pgvector:latest
@@ -31,18 +31,18 @@ services:
       timeout: 5s
       retries: 5
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    depends_on:
-      - api
-    command: npm start
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     - api
+  #   command: npm start
 
 volumes:
   postgres_data:
