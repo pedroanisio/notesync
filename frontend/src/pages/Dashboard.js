@@ -33,6 +33,9 @@ const Dashboard = () => {
   const [filteredNotes, setFilteredNotes] = useState([]);
   const [sortOption, setSortOption] = useState('updated');
   const toast = useToast();
+  
+  // Move the useColorModeValue hook to the top level
+  const emptyStateBgColor = useColorModeValue('gray.50', 'gray.700');
 
   // Load all tags
   useEffect(() => {
@@ -172,7 +175,7 @@ const Dashboard = () => {
             p={10}
             borderWidth={1}
             borderRadius="lg"
-            bg={useColorModeValue('gray.50', 'gray.700')}
+            bg={emptyStateBgColor}
           >
             <Text fontSize="lg">No notes found. Create your first note!</Text>
           </Box>
