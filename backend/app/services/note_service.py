@@ -8,6 +8,7 @@ from sqlalchemy.sql import func
 from app.db.models import Note
 from app.services.embedding_service import embedding_service
 from app.services.diff_service import diff_service
+import uuid
 
 class NoteService:
     def create_note(self, db: Session, title: str, raw_content: str, tags: List[str] = None) -> Note:
@@ -17,6 +18,29 @@ class NoteService:
             
         # Generate content hash for ID
         content_hash = self._generate_hash(title + raw_content)
+        
+        # Check for collision
+        existing_note = self.get_note(db, content_hash)
+        if existing_note:
+            # Verification check: Compare entire content
+            if existing_note.title == title and existing_note.raw_content == raw_content:
+                # Same content, return existing note
+                return existing_note
+            else:
+                # Collision detected - implement fallback strategy
+                # Approach 1: Append a random salt and rehash
+                salt = str(uuid.uuid4())
+                content_hash = self._generate_hash(title + raw_content + salt)
+                
+                # Alternative approaches (uncomment to use):
+                # Approach 2: Fallback to UUID
+                # content_hash = str(uuid.uuid4())
+                
+                # Approach 3: Add incremental suffix
+                # suffix = 1
+                # while self.get_note(db, f"{content_hash}_{suffix}"):
+                #     suffix += 1
+                # content_hash = f"{content_hash}_{suffix}"
         
         # Process markdown content
         content = markdown.markdown(raw_content)
