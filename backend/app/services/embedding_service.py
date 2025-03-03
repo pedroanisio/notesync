@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.models import Note
+from sqlalchemy import text
 
 class EmbeddingService:
     def __init__(self):
@@ -23,15 +24,18 @@ class EmbeddingService:
         if not source_note or source_note.vector_data is None:
             return []
         
+        # Convert vector to string format with square brackets for pgvector
+        vector_str = str(source_note.vector_data.tolist()) if hasattr(source_note.vector_data, 'tolist') else str(source_note.vector_data)
+        
         # Use PostgreSQL's vector similarity search
         similar_notes = db.execute(
-            f"""
-            SELECT id, title, similarity(vector_data, '{source_note.vector_data}') as score 
+            text(f"""
+            SELECT id, title, 1 - (vector_data <=> '{vector_str}'::vector) as score 
             FROM notes 
             WHERE id != '{note_id}' AND archived = false
-            ORDER BY vector_data <=> '{source_note.vector_data}' 
+            ORDER BY vector_data <=> '{vector_str}'::vector 
             LIMIT {limit}
-            """
+            """)
         ).fetchall()
         
         # Format results
@@ -50,16 +54,20 @@ class EmbeddingService:
         # Generate embedding for the query text
         query_embedding = self.generate_embedding(query_text)
         
-        # Use PostgreSQL's vector similarity search
-        similar_notes = db.execute(
-            f"""
-            SELECT id, title, similarity(vector_data, '{query_embedding}') as score 
+        # Convert the embedding to a string format with square brackets for pgvector
+        embedding_str = str(query_embedding.tolist())  # Already has square brackets
+        
+        # Build the SQL query
+        sql_query = f"""
+            SELECT id, title, 1 - (vector_data <=> '{embedding_str}'::vector) as score 
             FROM notes 
             WHERE archived = false
-            ORDER BY vector_data <=> '{query_embedding}' 
+            ORDER BY vector_data <=> '{embedding_str}'::vector 
             LIMIT {limit}
-            """
-        ).fetchall()
+        """
+        
+        # Use text() to declare this as a textual SQL expression
+        similar_notes = db.execute(text(sql_query)).fetchall()
         
         # Format results
         results = []

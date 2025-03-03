@@ -3,6 +3,8 @@ import hashlib
 import markdown
 from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
+from sqlalchemy import any_
+from sqlalchemy.sql import func
 from app.db.models import Note
 from app.services.embedding_service import embedding_service
 from app.services.diff_service import diff_service
@@ -119,7 +121,7 @@ class NoteService:
     def get_notes_by_tag(self, db: Session, tag: str, skip: int = 0, limit: int = 100) -> List[Note]:
         """Get notes by tag"""
         return db.query(Note).filter(
-            Note.tags.contains([tag]),
+            tag.lower() == any_(func.lower(Note.tags)),
             Note.archived == False
         ).order_by(Note.updated_at.desc()).offset(skip).limit(limit).all()
     
@@ -148,7 +150,7 @@ class NoteService:
         # Tag filtering
         if tags:
             for tag in tags:
-                db_query = db_query.filter(Note.tags.contains([tag]))
+                db_query = db_query.filter(tag.lower() == any_(func.lower(Note.tags)))
         
         # Get results
         results = db_query.order_by(Note.updated_at.desc()).limit(limit).all()
