@@ -1,0 +1,6 @@
+# Test & coverage
+.coverage
+coverage_report/
+.pytest_cache/
+test.db
+__pycache__/ 
