@@ -1,5 +1,5 @@
 // src/pages/NoteDetail.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
@@ -21,32 +21,43 @@ import {
 } from '@chakra-ui/react';
 import { EditIcon, DeleteIcon, TimeIcon, LinkIcon } from '@chakra-ui/icons';
 import { useNotes } from '../contexts/NoteContext';
-import { getNote, getSimilarNotes } from '../services/noteService';
+import { getSimilarNotes } from '../services/noteService';
 import ReactMarkdown from 'react-markdown';
 
 const NoteDetail = () => {
   const { noteId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
-  const { archiveNoteById } = useNotes();
+  const { fetchNote, archiveNoteById, currentNote } = useNotes();
   
   const [note, setNote] = useState(null);
   const [similarNotes, setSimilarNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Function to fetch similar notes - separated to avoid dependency issues
+  const fetchSimilarNotes = useCallback(async (id) => {
+    try {
+      const similar = await getSimilarNotes(id);
+      setSimilarNotes(similar);
+    } catch (err) {
+      console.error('Error loading similar notes:', err);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchNoteData = async () => {
       setLoading(true);
       try {
-        const noteData = await getNote(noteId);
-        setNote(noteData);
-        
-        // Get similar notes
-        const similar = await getSimilarNotes(noteId);
-        setSimilarNotes(similar);
-        
-        setError(null);
+        const noteData = await fetchNote(noteId);
+        if (noteData) {
+          setNote(noteData);
+          // Fetch similar notes after getting the note
+          fetchSimilarNotes(noteId);
+          setError(null);
+        } else {
+          setError('Note not found');
+        }
       } catch (err) {
         setError('Error loading note. It may have been deleted or you may not have permission to view it.');
         console.error(err);
@@ -56,7 +67,7 @@ const NoteDetail = () => {
     };
     
     fetchNoteData();
-  }, [noteId]);
+  }, [noteId, fetchNote, fetchSimilarNotes]);
 
   const handleArchive = async () => {
     try {
