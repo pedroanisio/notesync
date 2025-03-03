@@ -28,8 +28,7 @@ import {
   MenuItem,
   Select,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, AddIcon, SearchIcon } from '@chakra-ui/icons';
-import { BsGrid, BsList } from 'react-icons/bs';
+import { ChevronDownIcon, AddIcon, SearchIcon, ViewIcon, HamburgerIcon } from '@chakra-ui/icons';
 import { useNoteContext } from '../contexts/NoteContext';
 import NoteCard from '../components/notes/NoteCard';
 
@@ -237,7 +236,7 @@ const Dashboard = () => {
                     colorScheme={viewMode === 'grid' ? 'brand' : undefined}
                     p={2}
                   >
-                    <Icon as={BsGrid} />
+                    <Icon as={ViewIcon} />
                   </Button>
                   <Button
                     size="sm"
@@ -247,7 +246,7 @@ const Dashboard = () => {
                     colorScheme={viewMode === 'list' ? 'brand' : undefined}
                     p={2}
                   >
-                    <Icon as={BsList} />
+                    <Icon as={HamburgerIcon} />
                   </Button>
                 </HStack>
               </HStack>

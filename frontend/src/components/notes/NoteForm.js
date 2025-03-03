@@ -86,7 +86,11 @@ const NoteForm = ({ initialValues, isEditMode = false }) => {
     setIsSubmitting(true);
     try {
       if (isEditMode) {
-        await editNote(initialValues.id, { title, content, tags });
+        await editNote(initialValues.id, { 
+          title, 
+          raw_content: content,
+          tags 
+        });
         toast({
           title: 'Note updated',
           description: 'Your note has been successfully updated',
@@ -95,7 +99,11 @@ const NoteForm = ({ initialValues, isEditMode = false }) => {
           isClosable: true,
         });
       } else {
-        const newNote = await addNote({ title, content, tags });
+        const newNote = await addNote({ 
+          title, 
+          raw_content: content,
+          tags 
+        });
         toast({
           title: 'Note created',
           description: 'Your note has been successfully created',
@@ -297,11 +305,70 @@ const NoteForm = ({ initialValues, isEditMode = false }) => {
                       >
                         {content ? (
                           <ReactMarkdown
+                            children={content}
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeHighlight]}
-                          >
-                            {content}
-                          </ReactMarkdown>
+                            components={{
+                              // Basic text components
+                              p: (props) => <Text mb={4} {...props} />,
+                              h1: (props) => <Heading as="h1" size="xl" mt={6} mb={4} {...props} />,
+                              h2: (props) => <Heading as="h2" size="lg" mt={5} mb={3} {...props} />,
+                              h3: (props) => <Heading as="h3" size="md" mt={4} mb={2} {...props} />,
+                              h4: (props) => <Heading as="h4" size="sm" mt={3} mb={2} {...props} />,
+                              
+                              // Lists
+                              ul: (props) => <Box as="ul" pl={5} mb={4} {...props} />,
+                              ol: (props) => <Box as="ol" pl={5} mb={4} {...props} />,
+                              li: (props) => <Box as="li" mb={1} {...props} />,
+                              
+                              // Code blocks and inline code
+                              code: ({node, inline, className, children, ...props}) => {
+                                const match = /language-(\w+)/.exec(className || '');
+                                return !inline ? (
+                                  <Box 
+                                    as="pre" 
+                                    p={3} 
+                                    bg="gray.800" 
+                                    borderRadius="md" 
+                                    my={4}
+                                    overflow="auto"
+                                    className={className}
+                                    {...props}
+                                  >
+                                    <Box as="code" color="white" className={className} {...props}>
+                                      {children}
+                                    </Box>
+                                  </Box>
+                                ) : (
+                                  <Box 
+                                    as="code" 
+                                    px={1} 
+                                    bg="gray.200" 
+                                    _dark={{ bg: "gray.700" }}
+                                    borderRadius="sm"
+                                    {...props}
+                                  >
+                                    {children}
+                                  </Box>
+                                );
+                              },
+                              
+                              // Blockquotes
+                              blockquote: (props) => (
+                                <Box
+                                  as="blockquote"
+                                  pl={4}
+                                  py={2}
+                                  my={4}
+                                  borderLeftWidth="4px"
+                                  borderLeftColor="brand.300"
+                                  bg={useColorModeValue("gray.50", "gray.700")}
+                                  borderRadius="md"
+                                  {...props}
+                                />
+                              ),
+                            }}
+                          />
                         ) : (
                           <Text color="gray.500" fontStyle="italic">
                             Your preview will appear here...

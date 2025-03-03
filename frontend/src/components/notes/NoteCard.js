@@ -1,183 +1,142 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Heading,
   Text,
-  Flex,
-  Badge,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  useColorModeValue,
   HStack,
+  Badge,
+  useColorModeValue,
+  Link,
+  Flex,
   Spacer,
+  Icon,
   useDisclosure,
   Collapse,
-  Tooltip,
 } from '@chakra-ui/react';
-import { 
-  SettingsIcon, 
-  ViewIcon, 
-  EditIcon, 
-  DeleteIcon, 
-  TimeIcon, 
-  StarIcon,
-  ChevronDownIcon
-} from '@chakra-ui/icons';
+import { TimeIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 
-const NoteCard = ({ note, onArchive }) => {
+const NoteCard = ({ note, isListView = false, showSimilarity = false, similarity = null }) => {
   const { isOpen, onToggle } = useDisclosure();
+  const [isHovered, setIsHovered] = useState(false);
   
-  // Modern color scheme
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const cardBorder = useColorModeValue('gray.100', 'gray.700');
-  const cardHoverBg = useColorModeValue('gray.50', 'gray.700');
-  const headingColor = useColorModeValue('gray.800', 'white');
-  const textColor = useColorModeValue('gray.600', 'gray.300');
-  const metaColor = useColorModeValue('gray.500', 'gray.400');
-  
-  // Format date for display
+  const noteContent = note.raw_content || note.content || '';
+  const preview = noteContent.length > 150 ? `${noteContent.substring(0, 150)}...` : noteContent;
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return date.toLocaleDateString();
   };
 
-  // Calculate preview text (first 150 chars)
-  const previewText = note.raw_content.length > 150
-    ? `${note.raw_content.substring(0, 150)}...`
-    : note.raw_content;
+  // Styled components with useColorModeValue
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const cardHoverBg = useColorModeValue('gray.50', 'gray.700');
+  const headingColor = useColorModeValue('gray.800', 'white');
+  const headingHoverColor = useColorModeValue('brand.600', 'brand.400');
+  const textColor = useColorModeValue('gray.600', 'gray.300');
+  const accentColor = useColorModeValue('brand.500', 'brand.300');
 
   return (
     <Box
-      borderWidth="1px"
+      as={RouterLink}
+      to={`/notes/${note.id}`}
+      p={5}
       borderRadius="lg"
-      borderColor={cardBorder}
-      bg={cardBg}
       boxShadow="sm"
+      bg={cardBg}
+      borderTop="4px solid"
+      borderTopColor={accentColor}
       transition="all 0.3s"
-      position="relative"
-      overflow="hidden"
-      _hover={{ 
-        transform: 'translateY(-4px)',
-        boxShadow: 'md',
-        borderColor: 'brand.300'
+      _hover={{
+        boxShadow: "md",
+        transform: "translateY(-2px)",
+        bg: cardHoverBg
       }}
+      position="relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      display="block"
+      textDecoration="none"
+      h={isListView ? "auto" : "100%"}
+      maxW={isListView ? "100%" : "none"}
     >
-      {/* Colored top accent bar */}
-      <Box 
-        h="4px" 
-        bg="brand.500" 
-        position="absolute" 
-        top={0} 
-        left={0} 
-        right={0}
-      />
-      
-      <Box p={5}>
-        <Flex justify="space-between" align="flex-start" mb={2}>
-          <Heading 
-            as="h3" 
-            size="md" 
-            noOfLines={1}
-            color={headingColor}
-            fontWeight="700"
-            transition="color 0.2s"
-            _hover={{ color: 'brand.500' }}
-          >
-            <Link to={`/notes/${note.id}`}>{note.title}</Link>
-          </Heading>
-          
-          <Menu>
-            <MenuButton
-              as={IconButton}
-              icon={<SettingsIcon />}
-              variant="ghost"
-              size="sm"
-              aria-label="Note options"
-              color={metaColor}
-              _hover={{ color: 'brand.500', bg: cardHoverBg }}
-            />
-            <MenuList shadow="lg">
-              <MenuItem
-                icon={<ViewIcon />}
-                as={Link}
-                to={`/notes/${note.id}`}
-              >
-                View
-              </MenuItem>
-              <MenuItem
-                icon={<EditIcon />}
-                as={Link}
-                to={`/notes/${note.id}/edit`}
-              >
-                Edit
-              </MenuItem>
-              <MenuItem
-                icon={<DeleteIcon />}
-                onClick={() => onArchive(note.id)}
-                color="red.500"
-              >
-                Archive
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        </Flex>
-        
-        <HStack spacing={2} mb={3} color={metaColor} fontSize="sm">
-          <TimeIcon fontSize="xs" />
-          <Text>{formatDate(note.updated_at)}</Text>
-        </HStack>
-        
-        <Text 
-          noOfLines={isOpen ? undefined : 3} 
-          fontSize="md" 
-          mb={3}
-          color={textColor}
-          lineHeight="tall"
+      <HStack mb={2} spacing={2}>
+        <Heading
+          as="h3"
+          size={isListView ? "md" : "lg"}
+          noOfLines={2}
+          mb={1}
+          color={headingColor}
+          transition="color 0.2s"
+          _groupHover={{ color: headingHoverColor }}
+          flex="1"
+          wordBreak="break-word"
         >
-          {previewText}
+          {note.title}
+        </Heading>
+        <Spacer />
+      </HStack>
+
+      <Flex align="center" mb={3}>
+        <HStack color={textColor} fontSize="sm" spacing={3}>
+          <HStack>
+            <Icon as={TimeIcon} color={accentColor} />
+            <Text>{formatDate(note.created_at)}</Text>
+          </HStack>
+          
+          {showSimilarity && similarity !== null && (
+            <Badge colorScheme="brand" fontSize="xs">
+              {Math.round(similarity * 100)}% similar
+            </Badge>
+          )}
+        </HStack>
+      </Flex>
+
+      <Text 
+        color={textColor}
+        noOfLines={isOpen ? undefined : 2}
+        mb={2}
+        fontSize={isListView ? "sm" : "md"}
+      >
+        {preview}
+      </Text>
+      
+      {noteContent.length > 150 && (
+        <Text
+          color="brand.500"
+          fontWeight="medium"
+          fontSize="sm"
+          cursor="pointer"
+          onClick={(e) => {
+            e.preventDefault();
+            onToggle();
+          }}
+          display="inline-flex"
+          alignItems="center"
+        >
+          {isOpen ? 'Show less' : 'Show more'} 
+          <Icon as={isOpen ? ChevronUpIcon : ChevronDownIcon} ml={1} />
         </Text>
-        
-        {note.raw_content.length > 150 && (
-          <Text
-            fontSize="sm"
-            color="brand.500"
-            cursor="pointer"
-            onClick={onToggle}
-            mb={3}
-            fontWeight="medium"
-            _hover={{ textDecoration: 'underline' }}
-          >
-            {isOpen ? 'Show less' : 'Show more'}
-          </Text>
-        )}
-        
-        <Flex wrap="wrap" mt={4} gap={2}>
-          {note.tags && note.tags.map((tag) => (
+      )}
+
+      {note.tags && note.tags.length > 0 && (
+        <HStack mt={3} spacing={2} flexWrap="wrap">
+          {note.tags.map((tag, index) => (
             <Badge
-              key={tag}
+              key={index}
               colorScheme="brand"
               variant="subtle"
-              px={2}
-              py={1}
-              borderRadius="full"
-              fontSize="xs"
-              fontWeight="medium"
-              letterSpacing="0.4px"
               textTransform="lowercase"
+              fontSize="xs"
+              py={0.5}
+              px={2}
+              borderRadius="full"
             >
               #{tag}
             </Badge>
           ))}
-        </Flex>
-      </Box>
+        </HStack>
+      )}
     </Box>
   );
 };

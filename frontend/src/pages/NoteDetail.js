@@ -363,9 +363,11 @@ const NoteDetail = () => {
                     overflow="hidden"
                   >
                     <ReactMarkdown
+                      children={note.raw_content || note.content || ''}
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeHighlight]}
                       components={{
+                        // Basic text components
                         h1: props => <Heading as="h1" size="xl" my={4} {...props} />,
                         h2: props => <Heading as="h2" size="lg" my={4} {...props} />,
                         h3: props => <Heading as="h3" size="md" my={3} {...props} />,
@@ -374,6 +376,8 @@ const NoteDetail = () => {
                         ul: props => <Box as="ul" pl={4} my={2} {...props} />,
                         ol: props => <Box as="ol" pl={4} my={2} {...props} />,
                         li: props => <Box as="li" pb={1} {...props} />,
+                        
+                        // Special components
                         blockquote: props => (
                           <Box
                             borderLeftWidth={4}
@@ -386,6 +390,8 @@ const NoteDetail = () => {
                             {...props}
                           />
                         ),
+                        
+                        // Code blocks with syntax highlighting
                         code: ({node, inline, className, children, ...props}) => {
                           const match = /language-(\w+)/.exec(className || '');
                           return !inline ? (
@@ -411,7 +417,9 @@ const NoteDetail = () => {
                                     icon={<BiLinkExternal size="14px" />}
                                     aria-label="Copy code"
                                     size="xs"
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
                                       navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
                                       toast({
                                         title: 'Code copied to clipboard',
@@ -443,6 +451,8 @@ const NoteDetail = () => {
                             </Code>
                           );
                         },
+                        
+                        // Tables
                         table: props => (
                           <Box overflowX="auto" my={4}>
                             <Box 
@@ -476,6 +486,8 @@ const NoteDetail = () => {
                             {...props} 
                           />
                         ),
+                        
+                        // Other elements
                         hr: props => <Divider my={4} {...props} />,
                         a: props => (
                           <RouterLink
@@ -488,7 +500,7 @@ const NoteDetail = () => {
                         ),
                       }}
                     >
-                      {note.content}
+                      {note.raw_content || note.content || ''}
                     </ReactMarkdown>
                   </Box>
                 </TabPanel>
