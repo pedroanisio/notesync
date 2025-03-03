@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.note import Revision, DiffView, Note
+from app.schemas.revisions import Revision, DiffView
+from app.schemas.notes import Note
 from app.services.revision_service import revision_service
 from app.services.note_service import note_service
 

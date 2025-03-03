@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.note import (
+from app.schemas.notes import (
     Note, NoteCreate, NoteUpdate, NoteSearchQuery, 
     SimilarNoteResult, TagList
 )
