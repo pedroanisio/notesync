@@ -1,7 +1,7 @@
 # app/schemas/note.py
 from datetime import datetime
 from typing import List, Optional, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
 
 # Note Schemas
@@ -28,8 +28,7 @@ class NoteInDB(NoteBase):
     links_to: List[str] = []
     links_from: List[str] = []
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Note(NoteInDB):
     pass
@@ -45,6 +44,8 @@ class NoteSearchQuery(BaseModel):
 class SimilarNoteResult(BaseModel):
     note: Note
     similarity_score: float
+    
+    model_config = ConfigDict(from_attributes=True)
 
 # Tag Schema
 class TagList(BaseModel):

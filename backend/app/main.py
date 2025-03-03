@@ -2,9 +2,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.models import Base
-from app.db.session import engine
+from app.db.session import engine, SessionLocal
 from app.core.config import settings
 from app.api.routes import notes, revisions
+from app.db.init_db import init_db
+
+# Initialize database with required extensions
+db = SessionLocal()
+try:
+    init_db(db)
+finally:
+    db.close()
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)

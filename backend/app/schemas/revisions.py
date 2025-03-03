@@ -1,7 +1,7 @@
 # app/schemas/revision.py
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 
 # Revision Schemas
@@ -24,8 +24,7 @@ class RevisionInDB(RevisionBase):
     revision_number: int
     parent_revision_id: Optional[UUID] = None
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Revision(RevisionInDB):
     pass
