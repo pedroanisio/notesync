@@ -6,12 +6,14 @@ from sqlalchemy.orm import Session
 from app.db.models import Note, NoteRevision
 from app.services.note_service import NoteService
 from app.services.revision_service import RevisionService
+from app.services.diff_service import DiffService
 
 fake = Faker()
 
 # Get service instances - create them directly here to avoid circular imports
 note_service = NoteService()
 revision_service = RevisionService()
+diff_service = DiffService()
 
 class BaseFactory(factory.Factory):
     """Base factory with common utilities"""
@@ -71,15 +73,26 @@ class NoteFactory:
         for i in range(num_revisions):
             # Get current content
             current_content = note.raw_content
+            old_content = note.content
             
             # Generate new content (append a new paragraph)
             new_content = current_content + f"\n\nRevision {i+1}: {fake.paragraph()}"
             
-            # Update note to create a revision
+            # Update note without revision parameters
             note, _ = note_service.update_note(
                 db=db,
                 note_id=note.id,
-                raw_content=new_content,
+                raw_content=new_content
+            )
+            
+            # Create the revision manually
+            revision_service.save_revision(
+                db=db,
+                note_id=note.id,
+                old_raw_content=current_content,
+                old_content=old_content,
+                new_raw_content=new_content,
+                new_content=note.content,
                 revision_name=f"Revision {i+1}",
                 revision_note=f"Test revision {i+1}"
             )
@@ -107,6 +120,9 @@ class NoteFactory:
                 raw_content=new_content
             )
             
+            # Make sure changes are committed
+            db.commit()
+        
         # If bidirectional, also create backlinks
         if bidirectional:
             # For the last note, add links back to all previous notes
@@ -122,6 +138,9 @@ class NoteFactory:
                 note_id=notes[-1].id,
                 raw_content=backlinks_content
             )
+            
+            # Make sure changes are committed
+            db.commit()
             
         # Refresh all notes from the database
         for i in range(len(notes)):

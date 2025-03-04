@@ -114,6 +114,9 @@ class RevisionService:
         )
         
         # Create a new reversion revision
+        # Use the provided revision_name if available, otherwise use a default
+        reversion_name = revision_name if revision_name else f"Reversion to #{revision.revision_number}"
+        
         reversion_note = f"Reverted to revision {revision.revision_number}"
         if revision_note:
             reversion_note += f": {revision_note}"
