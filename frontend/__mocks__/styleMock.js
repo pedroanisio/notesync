@@ -1,2 +1,2 @@
-// Mock for CSS/style files
+// Mock for CSS files
 module.exports = {}; 
