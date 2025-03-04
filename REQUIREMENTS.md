@@ -1,3 +1,6 @@
+---
+filename: REQUIREMENTS.md
+---
 # Project Requirements
 
 This document specifies all mandatory requirements for the note-taking application. Each requirement has a unique ID for traceability and verification purposes.

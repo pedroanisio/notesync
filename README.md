@@ -1,3 +1,6 @@
+---
+filename: README.md
+---
 # NoteSync - Markdown Notes with Version History
 
 A modern note-taking application with Markdown support, revision history, and vector similarity search.
