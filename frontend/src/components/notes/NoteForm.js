@@ -220,7 +220,7 @@ const NoteForm = ({ initialValues, isEditMode = false }) => {
                   <FormLabel fontWeight="medium">Tags</FormLabel>
                   <HStack spacing={2} wrap="wrap" mb={2}>
                     {tags.map((tag) => (
-                      <Badge
+                      <Tag
                         key={tag}
                         py={1}
                         px={2}
@@ -231,7 +231,7 @@ const NoteForm = ({ initialValues, isEditMode = false }) => {
                       >
                         <TagLabel>#{tag}</TagLabel>
                         <TagCloseButton onClick={() => handleRemoveTag(tag)} />
-                      </Badge>
+                      </Tag>
                     ))}
                   </HStack>
                   <InputGroup size="md">
