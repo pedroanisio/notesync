@@ -37,6 +37,16 @@ jest.mock('rehype-highlight', () => {
   };
 });
 
+// Mock remark-gfm
+jest.mock('remark-gfm', () => {
+  return function mockRemarkGfm() {
+    return {};
+  };
+});
+
+// Mock CSS imports
+jest.mock('highlight.js/styles/github-dark.css', () => ({}));
+
 // Simple smoke test that doesn't actually render the App
 test('App exists and can be required', () => {
   // Dynamically require App only after mocks are in place

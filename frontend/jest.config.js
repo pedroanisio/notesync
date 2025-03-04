@@ -15,6 +15,6 @@ module.exports = {
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js'
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!react-markdown|rehype-highlight|micromark|unist|mdast|unified|bail|trough|remark|hast|property-information|space-separated-tokens|comma-separated-tokens|is-plain-obj|lowlight|fault|vfile|escape-string-regexp).+\\.js$'
+    '/node_modules/(?!react-markdown|rehype-highlight|micromark|unist|mdast|unified|bail|trough|remark|remark-gfm|hast|property-information|space-separated-tokens|comma-separated-tokens|is-plain-obj|lowlight|fault|vfile|escape-string-regexp).+\\.js$'
   ]
 }; 
