@@ -137,4 +137,22 @@ jest.mock('rehype-highlight', () => {
 // Mock remark-gfm
 jest.mock('remark-gfm', () => {
   return () => ({});
-}); 
+});
+
+// Add mock for the highlight.js CSS import
+jest.mock('highlight.js/styles/github-dark.css', () => ({}), { virtual: true });
+
+// Mock for rehype-highlight
+jest.mock('rehype-highlight', () => {
+  return () => ({});
+});
+
+// Mock for remark-gfm
+jest.mock('remark-gfm', () => {
+  return () => ({});
+});
+
+// Add mock for the NoteForm component
+jest.mock('../src/components/notes/NoteForm', () => {
+  return require('../../__mocks__/NoteFormMock.js');
+}, { virtual: false }); 
