@@ -50,7 +50,10 @@ const NoteDetail = () => {
   const params = useParams();
   const noteId = params.noteId; // Ensure this matches the route parameter name
   const navigate = useNavigate();
-  const { note, loading, error, fetchNote } = useNoteContext();
+  const { fetchNote } = useNoteContext();
+  
+  // Define note state locally for this component
+  const [note, setNote] = useState(null);
   const [similarNotes, setSimilarNotes] = useState([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   const toast = useToast();
@@ -104,7 +107,6 @@ const NoteDetail = () => {
           setNote(noteData);
           setApiError(null);
           onOpen(); // Trigger entry animation
-          fetchSimilarNotes();
         } else {
           setApiError('Note not found');
         }
@@ -117,7 +119,14 @@ const NoteDetail = () => {
     };
 
     loadNote();
-  }, [noteId, onOpen, fetchSimilarNotes]);
+  }, [noteId, onOpen]);
+
+  // Update similar notes when note changes
+  useEffect(() => {
+    if (note) {
+      fetchSimilarNotes();
+    }
+  }, [note, fetchSimilarNotes]);
 
   const handleArchive = async () => {
     try {
