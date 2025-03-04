@@ -3,7 +3,6 @@ import pytest
 import asyncio
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy_utils import database_exists, create_database, drop_database
 from typing import Generator, Any
 from fastapi.testclient import TestClient
 from app.main import app
@@ -13,8 +12,8 @@ from app.services.note_service import NoteService
 from app.services.revision_service import RevisionService
 from tests.factories import NoteFactory
 
-# Test database URL - use SQLite for tests
-TEST_DATABASE_URL = "sqlite:///./test.db"
+# Test database URL - use PostgreSQL for tests
+TEST_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/test_db")
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -25,30 +24,34 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def test_engine():
-    # Create a test database
+    # Create a test database connection
     engine = create_engine(TEST_DATABASE_URL)
+    
+    # Create all tables
+    Base.metadata.create_all(bind=engine)
+    
     yield engine
-    # Remove the test database file
-    try:
-        os.remove("./test.db")
-    except FileNotFoundError:
-        pass
+    
+    # Drop all tables when done with all tests
+    Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
 def db_session(test_engine) -> Generator[Session, Any, None]:
-    # Create all tables
-    Base.metadata.create_all(bind=test_engine)
-    
     # Create a new session for the test
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
     session = TestingSessionLocal()
     
+    # Start with a clean slate for each test
+    for table in reversed(Base.metadata.sorted_tables):
+        session.execute(table.delete())
+    session.commit()
+    
     try:
         yield session
     finally:
+        # Roll back any changes made during the test
+        session.rollback()
         session.close()
-        # Clean up tables after test
-        Base.metadata.drop_all(bind=test_engine)
 
 @pytest.fixture
 def client(db_session) -> Generator[TestClient, Any, None]:

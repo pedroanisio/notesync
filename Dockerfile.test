@@ -1,0 +1,28 @@
+# Test-specific Dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install test dependencies
+RUN pip install --no-cache-dir pytest pytest-asyncio pytest-cov
+
+# Copy application code
+COPY backend/ .
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test_db
+
+# Command to run tests
+CMD ["pytest", "-v", "tests/"] 

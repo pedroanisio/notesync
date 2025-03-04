@@ -9,6 +9,7 @@ python-dotenv==1.0.0
 python-multipart
 sentence-transformers
 sqlalchemy
+sqlalchemy-utils
 uvicorn
 pgvector
 pytest==7.4.0
