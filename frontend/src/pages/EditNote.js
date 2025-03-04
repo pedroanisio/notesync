@@ -107,9 +107,10 @@ const EditNote = () => {
         borderRadius="lg"
       >
         <NoteForm
-          initialNote={note}
+          initialValues={note}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
+          isEditMode={true}
         />
       </Box>
     </Container>
