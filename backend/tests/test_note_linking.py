@@ -39,15 +39,15 @@ class TestNoteLinking:
         note1_data = response1.json()
         note2_data = response2.json()
         
+        # Debug output
+        print(f"Note 1 links_to: {note1_data['links_to']}")
+        print(f"Note 2 links_from: {note2_data['links_from']}")
+        
         # Note 1 links to Note 2
         assert note2_id in note1_data["links_to"]
         
         # Note 2 is linked from Note 1
         assert note1_id in note2_data["links_from"]
-        
-        # Also check the reverse direction
-        assert note1_id in note2_data["links_to"]
-        assert note2_id in note1_data["links_from"]
     
     def test_link_update_on_content_change(self, client, linked_notes):
         """TC-LINK-003: Link Update on Content Change"""

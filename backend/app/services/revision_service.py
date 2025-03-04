@@ -114,9 +114,6 @@ class RevisionService:
         )
         
         # Create a new reversion revision
-        # Use the provided revision_name if available, otherwise use a default
-        reversion_name = revision_name if revision_name else f"Reversion to #{revision.revision_number}"
-        
         reversion_note = f"Reverted to revision {revision.revision_number}"
         if revision_note:
             reversion_note += f": {revision_note}"
@@ -129,7 +126,7 @@ class RevisionService:
             old_content=note.content,
             new_raw_content=reconstructed["raw_content"],
             new_content=reconstructed["content"],
-            revision_name=revision_name or f"Reversion to #{revision.revision_number}",
+            revision_name=revision_name,  # Use the provided revision name directly
             revision_note=reversion_note,
             parent_revision_id=revision.revision_id
         )

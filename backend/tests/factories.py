@@ -105,6 +105,9 @@ class NoteFactory:
         """Create a network of linked notes"""
         notes = NoteFactory.create_batch(db, num_notes, **kwargs)
         
+        # First, create all the notes and commit
+        db.commit()
+        
         # Create links between notes
         for i, note in enumerate(notes):
             # Link to the next note in the list (circular)
@@ -120,7 +123,7 @@ class NoteFactory:
                 raw_content=new_content
             )
             
-            # Make sure changes are committed
+            # Make sure changes are committed after each update
             db.commit()
         
         # If bidirectional, also create backlinks
@@ -141,11 +144,11 @@ class NoteFactory:
             
             # Make sure changes are committed
             db.commit()
-            
-        # Refresh all notes from the database
+        
+        # Explicitly refresh all notes from the database to get the latest state
         for i in range(len(notes)):
             db.refresh(notes[i])
-            
+        
         return notes
     
     @staticmethod

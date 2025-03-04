@@ -113,11 +113,19 @@ def sample_notes(db_session) -> list:
 def linked_notes(db_session) -> list:
     """Create notes with links for testing using factory"""
     notes = NoteFactory.create_with_links(db_session, 2)
+    
+    # Make sure the session is committed and notes are refreshed
+    db_session.commit()
+    for note in notes:
+        db_session.refresh(note)
+    
     return [{
         "id": note.id,
         "title": note.title,
         "raw_content": note.raw_content,
-        "tags": note.tags
+        "tags": note.tags,
+        "links_to": note.links_to,
+        "links_from": note.links_from
     } for note in notes]
 
 @pytest.fixture
