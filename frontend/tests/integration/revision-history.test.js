@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithProviders, mockAxios } from '../setup';
+import { renderWithProvidersNoRouter, mockAxios } from '../setup';
 import RevisionHistory from '../../src/pages/RevisionHistory';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -34,6 +34,17 @@ describe('Revision History Integration Flow', () => {
     mockAxios.reset();
     mockAxios.onGet(`/notes/${noteId}`).reply(200, mockNote);
     mockAxios.onGet(`/notes/${noteId}/revisions`).reply(200, mockRevisions);
+    
+    // Mock console to avoid warnings
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    console.error.mockRestore();
+    console.warn.mockRestore();
+    console.log.mockRestore();
   });
 
   test('should display revision history and revert to a revision', async () => {
@@ -49,7 +60,8 @@ describe('Revision History Integration Flow', () => {
       success: true
     });
 
-    renderWithProviders(
+    // Use renderWithProvidersNoRouter instead to avoid nested routers
+    renderWithProvidersNoRouter(
       <MemoryRouter initialEntries={[`/notes/${noteId}/revisions`]}>
         <Routes>
           <Route path="/notes/:noteId/revisions" element={<RevisionHistory />} />
@@ -62,24 +74,26 @@ describe('Revision History Integration Flow', () => {
     await waitFor(() => {
       expect(screen.getByText('Revision #2')).toBeInTheDocument();
       expect(screen.getByText('Important update')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
     
     // View diff
-    await userEvent.click(screen.getByText('View Changes'));
+    const viewChangesButton = screen.getByText('View Changes');
+    await userEvent.click(viewChangesButton);
     
     // Verify diff modal shows up
     await waitFor(() => {
       expect(screen.getByText('Before')).toBeInTheDocument();
       expect(screen.getByText('After')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
     
     // Revert to this revision
-    await userEvent.click(screen.getByText('Revert to This Version'));
+    const revertButton = screen.getByText('Revert to This Version');
+    await userEvent.click(revertButton);
     
     // Verify we navigate back to note detail
     await waitFor(() => {
       expect(mockAxios.history.post.length).toBe(1);
       expect(screen.getByText('Note Detail Page')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 }); 

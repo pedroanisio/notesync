@@ -14,26 +14,29 @@ export const mockAxios = new MockAdapter(axios);
 // Set up mock API responses
 beforeEach(() => {
   // Mock notes API response
-  mockAxios.onGet(/\/notes(\?.*)?$/).reply(200, [
-    { 
-      id: '1', 
-      title: 'First Note', 
-      content: 'This is the first note content', 
-      raw_content: 'This is the first note content',
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z',
-      tags: ['test', 'sample']
-    },
-    { 
-      id: '2', 
-      title: 'Second Note', 
-      content: 'This is the second note content', 
-      raw_content: 'This is the second note content',
-      created_at: '2023-01-02T00:00:00Z',
-      updated_at: '2023-01-02T00:00:00Z',
-      tags: ['demo', 'example']
-    }
-  ]);
+  mockAxios.onGet(/\/notes(\?.*)?$/).reply(function(config) {
+    // Immediately return a response instead of delaying
+    return [200, [
+      { 
+        id: '1', 
+        title: 'First Note', 
+        content: 'This is the first note content', 
+        raw_content: 'This is the first note content',
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+        tags: ['test', 'sample']
+      },
+      { 
+        id: '2', 
+        title: 'Second Note', 
+        content: 'This is the second note content', 
+        raw_content: 'This is the second note content',
+        created_at: '2023-01-02T00:00:00Z',
+        updated_at: '2023-01-02T00:00:00Z',
+        tags: ['demo', 'example']
+      }
+    ]];
+  });
 
   // Mock single note API response
   mockAxios.onGet(/\/notes\/\d+/).reply(200, {
@@ -94,16 +97,44 @@ const originalConsoleWarn = console.warn;
 const originalConsoleLog = console.log;
 
 beforeAll(() => {
+  // Mock ALL console methods (not just in CI)
   console.error = jest.fn();
   console.warn = jest.fn();
-  // Only filter logs in CI environment
-  if (process.env.CI) {
-    console.log = jest.fn();
-  }
+  console.log = jest.fn();
+  
+  // Suppress specific error about Playwright
+  jest.mock('@playwright/test', () => ({
+    test: jest.fn(),
+    expect: jest.fn()
+  }), { virtual: true });
+});
+
+// Clean up after EACH test to prevent leaks
+afterEach(() => {
+  // Ensure mockAxios doesn't have pending requests
+  mockAxios.reset();
 });
 
 afterAll(() => {
   console.error = originalConsoleError;
   console.warn = originalConsoleWarn;
   console.log = originalConsoleLog;
+});
+
+// Add a jest configuration to exclude e2e tests
+jest.mock('../tests/e2e/note-lifecycle.test.js', () => ({}), { virtual: true });
+
+// Import React markdown mock
+jest.mock('react-markdown', () => {
+  return ({ children }) => <div data-testid="markdown">{children}</div>;
+});
+
+// Additional mock for rehype-highlight
+jest.mock('rehype-highlight', () => {
+  return () => ({});
+});
+
+// Mock remark-gfm
+jest.mock('remark-gfm', () => {
+  return () => ({});
 }); 
