@@ -34,6 +34,7 @@ import {
   TabPanel,
   useBreakpointValue,
   Code,
+  Spinner,
 } from '@chakra-ui/react';
 import { ChevronRightIcon, EditIcon, ArrowBackIcon, DeleteIcon, StarIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import { BiArchive, BiLinkExternal, BiShareAlt } from 'react-icons/bi';
@@ -43,15 +44,19 @@ import NoteCard from '../components/notes/NoteCard';
 import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 import 'highlight.js/styles/github-dark.css';
+import { getNote } from '../services/noteService'; // Direct import
 
 const NoteDetail = () => {
-  const { id } = useParams();
+  const params = useParams();
+  const noteId = params.noteId; // Ensure this matches the route parameter name
   const navigate = useNavigate();
   const { note, loading, error, fetchNote } = useNoteContext();
   const [similarNotes, setSimilarNotes] = useState([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   const toast = useToast();
   const { isOpen, onOpen } = useDisclosure({ defaultIsOpen: true });
+  const [apiError, setApiError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Visual styling
   const bgColor = useColorModeValue('gray.50', 'gray.900');
@@ -80,23 +85,43 @@ const NoteDetail = () => {
   }, [note]);
 
   useEffect(() => {
-    // Load note data
-    if (id) {
-      fetchNote(id);
-      onOpen(); // Trigger entry animation
-    }
-  }, [id, fetchNote, onOpen]);
+    const loadNote = async () => {
+      setIsLoading(true);
+      
+      if (!noteId) {
+        console.error('🔴 No noteId parameter found in URL');
+        setApiError('Missing note ID parameter');
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        console.log(`🔍 Directly fetching note with ID: ${noteId}`);
+        const noteData = await getNote(noteId);
+        
+        if (noteData) {
+          console.log('✅ Note fetched successfully:', noteData.title);
+          setNote(noteData);
+          setApiError(null);
+          onOpen(); // Trigger entry animation
+          fetchSimilarNotes();
+        } else {
+          setApiError('Note not found');
+        }
+      } catch (err) {
+        console.error('Error fetching note:', err);
+        setApiError(`Failed to load note: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    // Load similar notes when the current note loads
-    if (note && note.id) {
-      fetchSimilarNotes();
-    }
-  }, [note, fetchSimilarNotes]);
+    loadNote();
+  }, [noteId, onOpen, fetchSimilarNotes]);
 
   const handleArchive = async () => {
     try {
-      await fetch(`${process.env.REACT_APP_API_URL}/api/v1/notes/${id}/archive`, {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/v1/notes/${noteId}/archive`, {
         method: 'PUT'
       });
       toast({
@@ -123,7 +148,7 @@ const NoteDetail = () => {
     }
     
     try {
-      await fetch(`${process.env.REACT_APP_API_URL}/api/v1/notes/${id}`, {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/v1/notes/${noteId}`, {
         method: 'DELETE'
       });
       toast({
@@ -144,56 +169,44 @@ const NoteDetail = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <Box bg={bgColor} minH="100vh" py={8}>
-        <Container maxW="container.lg">
-          <VStack spacing={6} align="stretch">
-            <HStack>
-              <Skeleton height="40px" width="40px" />
-              <Skeleton height="20px" width="200px" />
-            </HStack>
-            <Skeleton height="40px" width="70%" />
-            <HStack>
-              <Skeleton height="24px" width="80px" />
-              <Skeleton height="24px" width="80px" />
-              <Skeleton height="24px" width="80px" />
-            </HStack>
-            <Skeleton height="300px" width="100%" />
-            <SkeletonText mt={4} noOfLines={10} spacing={4} />
-          </VStack>
-        </Container>
-      </Box>
+      <Flex justify="center" align="center" h="400px">
+        <Spinner size="xl" />
+      </Flex>
     );
   }
 
-  if (error) {
+  if (apiError || !note) {
     return (
-      <Box bg={bgColor} minH="100vh" py={8}>
-        <Container maxW="container.lg">
-          <VStack spacing={6} align="center" p={8}>
-            <Text fontSize="xl" color="red.500">Error: {error}</Text>
-            <Button colorScheme="brand" onClick={() => navigate('/')} leftIcon={<ArrowBackIcon />}>
-              Back to Dashboard
-            </Button>
-          </VStack>
-        </Container>
-      </Box>
-    );
-  }
-
-  if (!note) {
-    return (
-      <Box bg={bgColor} minH="100vh" py={8}>
-        <Container maxW="container.lg">
-          <VStack spacing={6} align="center" p={8}>
-            <Text fontSize="xl" color={subtitleColor}>Note not found</Text>
-            <Button colorScheme="brand" onClick={() => navigate('/')} leftIcon={<ArrowBackIcon />}>
-              Back to Dashboard
-            </Button>
-          </VStack>
-        </Container>
-      </Box>
+      <Container maxW="container.lg" py={5}>
+        <Box 
+          p={6} 
+          borderWidth={1} 
+          borderRadius="lg" 
+          shadow="md" 
+          bg="white"
+          textAlign="center"
+        >
+          <Heading size="md" mb={4} color="red.500">
+            Note not found
+          </Heading>
+          <Text mb={6} color="gray.600">
+            {apiError || "The requested note could not be found."}
+          </Text>
+          <Text mb={6} fontSize="sm" color="gray.500">
+            Debug Info: URL parameter: {noteId || 'missing'}, 
+            Params object: {JSON.stringify(params)}
+          </Text>
+          <Button 
+            onClick={() => navigate('/')} 
+            colorScheme="blue"
+            size="md"
+          >
+            Back to Dashboard
+          </Button>
+        </Box>
+      </Container>
     );
   }
 
@@ -283,7 +296,7 @@ const NoteDetail = () => {
                     <IconButton
                       icon={<EditIcon />}
                       aria-label="Edit note"
-                      onClick={() => navigate(`/notes/${id}/edit`)}
+                      onClick={() => navigate(`/notes/${noteId}/edit`)}
                       colorScheme="brand"
                       variant="outline"
                       size={isMobile ? "sm" : "md"}
