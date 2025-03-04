@@ -4,10 +4,14 @@ from faker import Faker
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.db.models import Note, NoteRevision
-from app.services.note_service import note_service
-from app.services.revision_service import revision_service
+from app.services.note_service import NoteService
+from app.services.revision_service import RevisionService
 
 fake = Faker()
+
+# Get service instances - create them directly here to avoid circular imports
+note_service = NoteService()
+revision_service = RevisionService()
 
 class BaseFactory(factory.Factory):
     """Base factory with common utilities"""
@@ -30,8 +34,8 @@ class NoteFactory:
             title = fake.sentence(nb_words=5)
             
         if raw_content is None:
-            raw_content = fake.paragraphs(nb=3)
-            raw_content = "\n\n".join(raw_content)
+            paragraphs = fake.paragraphs(nb=3)
+            raw_content = "\n\n".join(paragraphs)
             
         if tags is None:
             # Generate 0-3 random tags
@@ -103,27 +107,27 @@ class NoteFactory:
                 raw_content=new_content
             )
             
-            # If bidirectional, also link back
-            if bidirectional and i == num_notes - 1:  # Only for the last note to avoid infinite loop
-                for j in range(num_notes - 1):
-                    back_idx = j
-                    back_id = notes[back_idx].id
-                    
-                    # Update the last note to link back to all previous notes
-                    new_content = notes[-1].raw_content + f"\n\nThis links back to [[{back_id}]]."
-                    
-                    note_service.update_note(
-                        db=db,
-                        note_id=notes[-1].id,
-                        raw_content=new_content
-                    )
-        
-        # Refresh notes from DB to get updated state
-        refreshed_notes = []
-        for note in notes:
-            refreshed_notes.append(note_service.get_note(db, note.id))
+        # If bidirectional, also create backlinks
+        if bidirectional:
+            # For the last note, add links back to all previous notes
+            backlinks_content = notes[-1].raw_content
             
-        return refreshed_notes
+            for j in range(num_notes - 1):
+                back_id = notes[j].id
+                backlinks_content += f"\n\nThis links back to [[{back_id}]]."
+            
+            # Update the last note with all backlinks at once
+            note_service.update_note(
+                db=db,
+                note_id=notes[-1].id,
+                raw_content=backlinks_content
+            )
+            
+        # Refresh all notes from the database
+        for i in range(len(notes)):
+            db.refresh(notes[i])
+            
+        return notes
     
     @staticmethod
     def create_with_similar_content(db: Session, num_notes: int = 3, 
@@ -178,7 +182,6 @@ class NoteFactory:
                                  **kwargs) -> List[Note]:
         """
         Create two notes that would have the same hash to test collision handling
-        This requires mocking the hash generation function temporarily
         """
         from unittest.mock import patch
         
@@ -193,13 +196,17 @@ class NoteFactory:
         )
         notes.append(first_note)
         
-        # Get the hash of the first note
+        # Create a patch for the hash function
         collision_hash = first_note.id
         
-        # Create second note with a patch to force the same hash
+        # Use the patch to create the second note
         with patch.object(note_service, '_generate_hash', return_value=collision_hash):
-            # Attempt to create second note with same hash but different content
+            # Try to create second note with same hash but different content
             try:
+                # We need to avoid SQLAlchemy's session caching
+                db.commit()
+                db.begin()
+                
                 second_note = note_service.create_note(
                     db=db,
                     title="Second Note",
@@ -210,5 +217,5 @@ class NoteFactory:
             except Exception as e:
                 # If collision handling isn't implemented, this might fail
                 print(f"Note creation with collision failed: {e}")
-                
+        
         return notes 

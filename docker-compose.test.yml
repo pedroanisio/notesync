@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: timescale/timescaledb-ha:pg14-latest
+    image: pgvector/pgvector:pg14
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -17,7 +17,7 @@ services:
     volumes:
       - ./pgvector_setup.sql:/docker-entrypoint-initdb.d/pgvector_setup.sql
     command: >
-      -c shared_preload_libraries=pg_stat_statements,pgvector
+      -c shared_preload_libraries=pg_stat_statements,vector
       -c pg_stat_statements.max=10000
       -c pg_stat_statements.track=all
 
@@ -29,7 +29,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5433/test_db
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/test_db
       PYTHONPATH: /app
     volumes:
       - ./backend:/app
