@@ -22,7 +22,7 @@ COPY backend/ .
 
 # Set environment variables
 ENV PYTHONPATH=/app
-ENV DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test_db
+ENV DATABASE_URI=postgresql://postgres:postgres@postgres:5432/test_db
 
 # Command to run tests
 CMD ["pytest", "-v", "tests/"] 

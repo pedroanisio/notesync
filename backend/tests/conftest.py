@@ -13,7 +13,7 @@ from app.services.revision_service import RevisionService
 from tests.factories import NoteFactory
 
 # Test database URL - use PostgreSQL for tests
-TEST_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/test_db")
+TEST_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@postgres:5432/test_db")
 
 @pytest.fixture(scope="session")
 def event_loop():
